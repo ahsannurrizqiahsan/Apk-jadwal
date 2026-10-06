@@ -1,0 +1,57 @@
+name: voice_schedule_app
+description: Asisten jadwal pribadi berbasis suara (Bahasa Indonesia) — voice-first personal scheduler.
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+  flutter: ">=3.19.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # --- Database lokal ---
+  # Dipilih sqflite (SQL murni, tanpa code generation) alih-alih Isar/Drift.
+  # Alasan: Isar & Drift butuh `build_runner` untuk generate file .g.dart /
+  # schema sebelum project bisa di-build. sqflite jalan langsung setelah
+  # `flutter pub get`, lebih aman untuk starting point tanpa perlu langkah
+  # codegen tambahan. Lihat README bagian "Keputusan Teknis".
+  sqflite: ^2.3.0
+  path: ^1.9.0
+  path_provider: ^2.1.4
+
+  # --- Kalender ---
+  table_calendar: ^3.0.9
+
+  # --- Notifikasi & reminder ---
+  # Dipin di bawah v22 karena v22 mengubah show()/zonedSchedule()/initialize()
+  # jadi named-parameter (breaking) & mewajibkan core library desugaring +
+  # Java 17. Upgrade belakangan jika mau, tapi sesuaikan pemanggilannya dulu.
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.9.4
+  # Dipakai HANYA untuk re-schedule reminder setelah HP restart (section 28),
+  # bukan untuk notifikasi per-jam itu sendiri (lihat reminder_scheduler.dart).
+  workmanager: ^0.5.2
+
+  # --- Voice: speech-to-text & text-to-speech ---
+  speech_to_text: ^7.3.0
+  flutter_tts: ^4.2.0
+
+  # --- State management ringan ---
+  provider: ^6.1.2
+
+  # --- Util ---
+  intl: ^0.19.0
+  permission_handler: ^11.3.1
+  uuid: ^4.5.1
+  shared_preferences: ^2.3.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
