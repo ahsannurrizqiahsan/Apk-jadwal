@@ -1,13 +1,9 @@
 name: Build APK
 
-# Build APK otomatis di server GitHub — kamu tidak perlu install Flutter
-# atau Android SDK apa pun di laptop/HP sendiri. Hasilnya bisa didownload
-# dari tab "Actions" setelah build selesai (~5-10 menit).
-
 'on':
   push:
     branches: [ main, master ]
-  workflow_dispatch: # supaya bisa di-run ulang manual dari tab Actions
+  workflow_dispatch:
 
 jobs:
   build:
@@ -15,6 +11,16 @@ jobs:
     steps:
       - name: Checkout kode
         uses: actions/checkout@v4
+
+      - name: Extract voice_schedule_app.zip kalau ada (upload dari HP sering flatten folder)
+        run: |
+          if [ -f voice_schedule_app.zip ]; then
+            unzip -o voice_schedule_app.zip -d /tmp/extracted
+            cp -rf /tmp/extracted/voice_schedule_app/. .
+            echo "Project berhasil di-extract dari voice_schedule_app.zip."
+          else
+            echo "voice_schedule_app.zip tidak ditemukan di root repo, lanjut pakai file yang sudah ada."
+          fi
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
