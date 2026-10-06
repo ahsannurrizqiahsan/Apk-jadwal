@@ -1,0 +1,69 @@
+name: Build APK
+
+# Build APK otomatis di server GitHub — kamu tidak perlu install Flutter
+# atau Android SDK apa pun di laptop/HP sendiri. Hasilnya bisa didownload
+# dari tab "Actions" setelah build selesai (~5-10 menit).
+
+'on':
+  push:
+    branches: [ main, master ]
+  workflow_dispatch: # supaya bisa di-run ulang manual dari tab Actions
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout kode
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Generate folder android/ (belum ada di repo ini)
+        run: flutter create --platforms=android --org com.voiceschedule .
+
+      - name: Tambahkan permission Android yang dibutuhkan (section 44 spek)
+        run: |
+          python3 - <<'PY'
+          import re
+
+          path = "android/app/src/main/AndroidManifest.xml"
+          with open(path) as f:
+              content = f.read()
+
+          permissions = (
+              '    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n'
+              '    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n'
+              '    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />\n'
+              '    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />\n'
+              '    <uses-permission android:name="android.permission.INTERNET" />\n'
+          )
+
+          if "RECORD_AUDIO" not in content:
+              content = re.sub(r"(<manifest[^>]*>)", r"\1\n" + permissions, content, count=1)
+              with open(path, "w") as f:
+                  f.write(content)
+              print("Permission ditambahkan ke AndroidManifest.xml.")
+          else:
+              print("Permission sudah ada, dilewati.")
+          PY
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analisa kode (tidak menggagalkan build kalau cuma lint warning)
+        run: flutter analyze
+        continue-on-error: true
+
+      - name: Build APK (release, signed dengan debug key bawaan Flutter)
+        run: flutter build apk --release
+
+      - name: Upload APK sebagai artifact yang bisa didownload
+        uses: actions/upload-artifact@v4
+        with:
+          name: voice-schedule-app-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
